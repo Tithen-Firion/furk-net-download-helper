@@ -6,7 +6,8 @@
 // @include     https://rarbg.to/*
 // @include     https://rutracker.org/*
 // @include     https://1337x.to/*
-// @version     1.0.1
+// @include     https://nyaa.si/*
+// @version     1.0.2
 // @grant       GM_xmlhttpRequest
 // @grant       GM_registerMenuCommand
 // ==/UserScript==
@@ -72,6 +73,17 @@ var siteDict = {
       where: 'after',
       selector: 'a[href^="/torrent/"]'
     }
+  },
+  'nyaa.si': {
+    isSingle: () => {
+      var path = document.location.pathname.split('/');
+      return path.length > 1 && path[1] == 'view';
+    },
+    extractInfoSingle: el => {
+      let download = el.querySelector('a[href$=".torrent"]');
+      return download ? download.href : null;
+    },
+    entriesSelector: 'tbody>tr'
   }
 };
 

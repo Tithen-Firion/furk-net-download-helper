@@ -7,6 +7,7 @@ Currently supported websites:
 * RarBG
 * RuTracker
 * 1337x
+* Nyaa
 
 ## Installation
 
