@@ -6,7 +6,7 @@
 // @include     https://rarbg.to/*
 // @include     https://rutracker.org/*
 // @include     https://1337x.to/*
-// @version     1.0
+// @version     1.0.0
 // @grant       GM_xmlhttpRequest
 // @grant       GM_registerMenuCommand
 // ==/UserScript==
