@@ -6,7 +6,7 @@
 // @include     https://rarbg.to/*
 // @include     https://rutracker.org/*
 // @include     https://1337x.to/*
-// @version     1.0.0
+// @version     1.0.1
 // @grant       GM_xmlhttpRequest
 // @grant       GM_registerMenuCommand
 // ==/UserScript==
@@ -29,7 +29,7 @@ var siteDict = {
     loadEntries: false,               // if true, loads all entries and extracts info with extractInfoSingle
     findID: url => {},                // extract ID from Location object (document.location or <a> tag), ignored when loadEntries is set to false
     singleTorrentUrlSelector: '',     // used to find a link to single-torrent page (uses entry as parent), ignored when loadEntries is set to false
-    extractInfo: entry => {},         // extract info from entry, ignored when loadEntries is set to true
+    extractInfo: el => {},            // extract info from entry, ignored when loadEntries is set to true; if not set defaults to extractInfoSingle
 
     buttonsSingle: {                  // determines where buttons should be inserted
       where: '',                      // 'after' or 'before'
@@ -54,14 +54,9 @@ var siteDict = {
       var path = document.location.pathname.split('/');
       return path.length > 2 && path[2] == 'viewtopic.php';
     },
-    findID: url => {
-      return url.search.split('=')[1];
-    },
     entriesSelector: 'tr.hl-tr',
-    extractInfo: entry => {
-      if(typeof entry === 'undefined')
-        entry = document;
-      let download = entry.querySelector('a[href^="dl.php"]');
+    extractInfoSingle: el => {
+      let download = el.querySelector('a[href^="dl.php"]');
       return download ? download.href : null;
     },
     buttonsMulti: {
@@ -80,8 +75,6 @@ var siteDict = {
   }
 };
 
-siteDict['rutracker.org'].extractInfoSingle = siteDict['rutracker.org'].extractInfo;
-
 /* common functions and settings */
 
 this.isSingle = () => {
@@ -93,10 +86,8 @@ this.findID = url => {
   return url.pathname.split('/')[2];
 };
 
-this.extractInfo = this.extractInfoSingle = el => {
+this.extractInfoSingle = el => {
   /* get magnet from element or current document */
-  if(typeof el === 'undefined')
-    el = document;
   var a = el.querySelector('a[href^="magnet:"]');
   return a ? a.href : '';
 };
@@ -224,13 +215,19 @@ var addButtons = (info, entry) => {
   insert(img, element, buttonsInfo.where);
 };
 
+var _extractInfoSingle = el => {
+  if(typeof el === 'undefined')
+    el = document;
+  return extractInfoSingle(el);
+}
+
 /* main logic */
 
 var siteInfo = sessionStorage.getItem('FurkHelperSiteInfo'); // get site info for host
 siteInfo = siteInfo ? JSON.parse(siteInfo) : {};
 
 if(isSingle()) {
-  let info = extractInfoSingle();
+  let info = _extractInfoSingle();
   addButtons(info);
 }
 else {
@@ -243,15 +240,21 @@ else {
       let id = findID(url);
       if(!(id in siteInfo)) {
         let data = await asyncGet(url.href, 'document');
-        info = extractInfoSingle(data.response);
+        info = _extractInfoSingle(data.response);
         siteInfo[id] = info;
       }
       else
         info = siteInfo[id];
       sessionStorage.setItem('FurkHelperSiteInfo', JSON.stringify(siteInfo)); // set site info for host
     }
-    else
-      info = extractInfo(entry);
+    else {
+      try {
+        info = extractInfo(entry);
+      }
+      catch(e if e instanceof ReferenceError) {
+        info = _extractInfoSingle(entry);
+      }
+    }
     if(info)
       addButtons(info, entry);
   }
