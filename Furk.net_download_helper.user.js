@@ -4,12 +4,13 @@
 // @namespace   tithen-firion.github.io
 // @include     https://thepiratebay.org/*
 // @include     https://rarbg.to/*
+// @include     https://rarbgmirror.org/*
 // @include     https://rutracker.org/*
 // @include     https://1337x.to/*
 // @include     https://nyaa.si/*
-// @version     1.0.2
-// @grant       GM_xmlhttpRequest
-// @grant       GM_registerMenuCommand
+// @version     1.1.0
+// @grant       GM.xmlHttpRequest
+// @require     https://greasemonkey.github.io/gm4-polyfill/gm4-polyfill.js
 // ==/UserScript==
 
 var base64Image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAMCAMAAABRJ730AAAAElBMVEUAAAAAAABJnt6t8kfqS6H////DxMXeAAAAAXRSTlMAQObYZgAAADhJREFUeAFtzFEKgAAMw9DM9v5n1qE/agL7eYwC+YXqerSH57pjM/58z3azj6StjfT1HWEJXM3hBIY9AtdPDU62AAAAAElFTkSuQmCC';
@@ -41,13 +42,14 @@ var siteDict = {
   'thepiratebay.org': {
     entriesSelector: '#searchResult>tbody>tr'
   },
+  'rarbgmirror.org': 'rarbg.to',
   'rarbg.to': {
     entriesSelector: '.lista2',
     singleTorrentUrlSelector: 'a[title]',
     loadEntries: true,
     buttonsMulti: {
-      where: 'before',
-      selector: 'span[class^="ncontenticon"]'
+      where: 'after',
+      selector: 'tr.lista2 > td:nth-child(2) > a'
     }
   },
   'rutracker.org': {
@@ -119,6 +121,8 @@ this.loadEntries = false;
 
 (self => {
   var site = siteDict[host];
+  if(typeof site == 'string')
+     site = siteDict[site];
   for(let f in site) {
     if(site.hasOwnProperty(f)) {
       self[f] = site[f];
@@ -139,7 +143,7 @@ var asyncGmXhr = async (method, url, type, data) => new Promise(resolve => {
   };
   if(typeof data !== 'undefined')
     info.data = data;
-  GM_xmlhttpRequest(info);
+  GM.xmlHttpRequest(info);
 });
 
 var asyncGet = async (url, type) => new Promise(resolve => {
